@@ -1,0 +1,35 @@
+name: Build APK
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10'
+
+      - name: Install Buildozer and dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y git zip unzip openjdk-17-jdk
+          pip install --user --upgrade buildozer cython virtualenv
+
+      - name: Build with Buildozer
+        run: |
+          buildozer init
+          # Настраиваем конфигурацию под Kivy-калькулятор
+          sed -i 's/package.name = myapp/package.name = fletcalc/' buildozer.spec
+          sed -i 's/package.domain = org.test/package.domain = org.fletcalc/' buildozer.spec
+          sed -i 's/# requirements = sqlite3,kivy/requirements = python3,kivy/' buildozer.spec
+          # Запускаем сборку APK
+          buildozer -v android debug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: calculator-apk
+          path: bin/*.apk
