@@ -15,7 +15,7 @@ jobs:
       - name: Install Buildozer and system dependencies
         run: |
           sudo apt update
-          # Устанавливаем ВСЕ необходимые библиотеки для Android SDK и Buildozer
+          # Устанавливаем все системные библиотеки
           sudo apt install -y git zip unzip openjdk-17-jdk libtinfo5 libstdc++6 \
             build-essential libffi-dev libssl-dev python3-dev \
             pkg-config zlib1g-dev xclip
@@ -28,8 +28,14 @@ jobs:
           sed -i 's/package.name = myapp/package.name = fletcalc/' buildozer.spec
           sed -i 's/package.domain = org.test/package.domain = org.fletcalc/' buildozer.spec
           sed -i 's/# requirements = sqlite3,kivy/requirements = python3,kivy/' buildozer.spec
-          # Запускаем сборку APK
-          buildozer -v android debug
+          
+          # Самое важное: автоматически принимаем все лицензии Android SDK перед сборкой
+          mkdir -p ~/.android
+          touch ~/.android/repositories.cfg
+          yes | buildozer android clean
+          
+          # Запускаем сборку APK (с флагом согласия с лицензиями)
+          yes | buildozer -v android debug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
